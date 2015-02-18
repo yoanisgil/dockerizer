@@ -14,7 +14,6 @@ class Repository(models.Model):
 
 
 class Application(models.Model):
-    owner = models.ForeignKey(User)
     name = models.CharField(max_length=255)
     repository = models.OneToOneField(Repository)
     template = models.CharField(max_length=255, default='django-1.7')
@@ -29,8 +28,27 @@ class ApplicationBuild(models.Model):
     tag = models.CharField(max_length=255)
     branch = models.CharField(max_length=255)
     commit = models.CharField(max_length=255)
+    built_by = models.ForeignKey(User)
+    launched_at = models.DateTimeField()
+    finished_at = models.DateTimeField(null=True)
 
     def __unicode__(self):
-        return "%s/%s:%s" % (self.application.owner, self.application.name, self.tag)
+        return "%s/%s:%s" % (self.built_by, self.application.name, self.tag)
+
+
+class BuildLogEntry(models.Model):
+    application_build = models.ForeignKey(ApplicationBuild)
+    entry_content = models.TextField()
+    generated_at = models.DateField(auto_now_add=True)
+
+    @staticmethod
+    def record_new_entry(*args, **kwargs):
+        entry = BuildLogEntry(*args, **kwargs)
+        entry.save()
+
+        return entry
+
+    def __unicode__(self):
+        return "%s:%s" % (self.generated_at, self.entry_content)
 
 

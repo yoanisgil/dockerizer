@@ -1,7 +1,9 @@
 __author__ = 'Yoanis Gil'
 
+from django.contrib.auth.models import User
+from django.utils import timezone
 from django.core.management.base import BaseCommand, CommandError
-from manager.models import Application, ApplicationBuild
+from manager.models import Application, ApplicationBuild, BuildLogEntry
 from optparse import make_option
 from django.conf import settings
 
@@ -75,9 +77,21 @@ class Command(BaseCommand):
 
                 image_id = None
 
+                builder = User.objects.get(username='admin')
+                tag = repo.head.commit.name_rev[0:12]
+                image_repository = "%s/%s" % (builder.username, application_name)
+
+                application_build = ApplicationBuild()
+                application_build.application = application
+                application_build.branch = branch
+                application_build.commit = repo.head.commit.name_rev
+                application_build.built_by = builder
+                application_build.launched_at = timezone.now()
+
+                application_build.save()
+
                 for line in cli.build(rm=True, path=dst_dir):
                     data = json.loads(line)
-                    print data
 
                     if 'stream' in data:
                         search = r'Successfully built ([0-9a-f]+)'
@@ -85,10 +99,10 @@ class Command(BaseCommand):
                         if match:
                             image_id = match.group(1)
 
-                self.stdout.write("Built image with id %s" % image_id)
+                    entry = BuildLogEntry.record_new_entry(application_build=application_build, entry_content=line)
+                    print entry
 
-                tag = repo.head.commit.name_rev[0:12]
-                image_repository = "%s/%s" % (application.owner.username, application_name)
+                self.stdout.write("Built image with id %s" % image_id)
 
                 tagged = cli.tag(image=image_id, tag=tag, repository=image_repository)
 
@@ -99,12 +113,9 @@ class Command(BaseCommand):
                 os.unlink(os.path.join(dst_dir, 'app'))
                 shutil.rmtree(tmp_dir)
 
-                application_build = ApplicationBuild()
-                application_build.application = application
                 application_build.image_id = image_id
                 application_build.tag = tag
-                application_build.branch = branch
-                application_build.commit = repo.head.commit.name_rev
+                application_build.finished_at = timezone.now()
 
                 application_build.save()
             except Application.DoesNotExist:
