@@ -34,6 +34,7 @@ class Command(BaseCommand):
 
                 origin = repo.remote('origin')
                 repo.create_head(branch, origin.refs[branch]).set_tracking_branch(origin.refs[branch])
+                repo.heads[branch].checkout()
                 origin.pull()
             except Application.DoesNotExist:
                 raise CommandError('Application "%s" does not exist' % application_name)
