@@ -22,5 +22,3 @@ class Command(BaseCommand):
         except ObjectDoesNotExist:
             user = User.objects.create_superuser(username=options['username'], password=options['password'], email=options['email'])
             user.save()
-        management.call_command('migrate', verbosity=1, interactive=False)
-        management.call_command('collectstatic', verbosity=1, interactive=False)

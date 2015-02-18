@@ -90,3 +90,6 @@ DOCKER_HOST = 'https://192.168.59.104:2376'
 DOCKER_TLS_VERIFY = 1
 DOCKER_CERT_PATH = '/Users/brujitos/.boot2docker/certs/boot2docker-vm'
 DOCKER_TLS_VERIFY = True
+
+STATIC_ROOT = '/webapp/deploy/static/'
+MEDIA_ROOT = '/webapp/deploy/media/'

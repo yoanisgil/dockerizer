@@ -22,8 +22,9 @@ RUNDIR=$(dirname $SOCKFILE)
 test -d $RUNDIR || mkdir -p $RUNDIR
 
 cd $DJANGODIR
-python manage.py dockersetup --username admin --password admin --email gil.yoanis@gmail.com
+python manage.py migrate --noinput
 python manage.py collectlayers --noinput
+python manage.py dockersetup --username admin --password admin --email gil.yoanis@gmail.com
 
 # Start your Django Unicorn
 # Programs meant to be run under supervisor should not daemonize themselves (do not use --daemon)
