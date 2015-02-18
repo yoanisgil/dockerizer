@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from optparse import make_option
-from django.core import management
 from django.core.exceptions import ObjectDoesNotExist
+
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (make_option('--username', action='store', dest='username', help='User username'), 
