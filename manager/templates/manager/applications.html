@@ -1,9 +1,50 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 {% load i18n %}
 
 {% block title %}{% trans 'Applications' %}{% endblock %}
 
+{% block csshead %}
+    {{ block.super }}
+    <!-- DataTables CSS -->
+    <link href="{% static "datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" %}"
+          rel="stylesheet">
+
+    <!-- DataTables Responsive CSS -->
+    <link href="{% static "css/datatables-responsive/css/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock %}
+
 {% block page_name %}{% trans 'Applications' %}{% endblock %}
 
 {% block content %}
+    <table class="table table-striped table-bordered table-hover" id="dataTables-example">
+        <thead>
+        <tr>
+            <th>{% trans "Application Name" %}</th>
+            <th>{% trans "Repository" %}</th>
+            <th>{% trans "Template" %}</th>
+            <th>{% trans "Actions" %}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for app in applications %}
+            <tr>
+                <td>{{ app.name }}</td>
+                <td>{{ app.repository.url }}</td>
+                <td>{{ app.template }}</td>
+                <td>
+                    <a href="{% url 'application-builds' app.id %}" type="button"
+                       class="btn btn-outline btn-primary">{% trans 'Builds' %}</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block jsfooter %}
+    {{ block.super }}
+    <!-- DataTables JavaScript -->
+    <script src="{% static "js/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js" %}"></script>
 {% endblock %}

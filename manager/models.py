@@ -14,6 +14,7 @@ class Repository(models.Model):
 
 
 class Application(models.Model):
+    owner = models.ForeignKey(User)
     name = models.CharField(max_length=255)
     repository = models.OneToOneField(Repository)
     template = models.CharField(max_length=255, default='django-1.7')

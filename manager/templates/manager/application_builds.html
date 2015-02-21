@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block title %}{{ app.name }} {% trans 'Builds' %}{% endblock %}
+
+{% block csshead %}
+    {{ block.super }}
+    <!-- DataTables CSS -->
+    <link href="{% static "datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" %}"
+          rel="stylesheet">
+
+    <!-- DataTables Responsive CSS -->
+    <link href="{% static "css/datatables-responsive/css/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block page_name %}{% trans 'Builds' %}{% endblock %}
+
+{% block content %}
+    <table class="table table-striped table-bordered table-hover" id="dataTables-example">
+        <thead>
+        <tr>
+            <th>{% trans "Image ID" %}</th>
+            <th>{% trans "Tag" %}</th>
+            <th>{% trans "Commit" %}</th>
+            <th>{% trans "Build On" %}</th>
+            <th>{% trans "Actions" %}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for build in builds %}
+            <tr>
+                <td>{{ build.image_id }}</td>
+                <td>{{ build.tag }}</td>
+                <td>{{ build.commit }}</td>
+                <td>{{ build.finished_at }}</td>
+                <td>
+                    <button href="" type="button"
+                            class="btn btn-outline btn-primary">{% trans 'Launch' %}</button>
+                    <button href="" type="button"
+                            class="btn btn-outline btn-danger">{% trans 'Destroy' %}</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block jsfooter %}
+    {{ block.super }}
+    <!-- DataTables JavaScript -->
+    <script src="{% static "js/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js" %}"></script>
+{% endblock %}

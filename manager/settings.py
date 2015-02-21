@@ -71,7 +71,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Montreal'
 
 USE_I18N = True
 
@@ -97,3 +97,5 @@ MEDIA_ROOT = '/webapp/deploy/media/'
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, 'templates'),
 )
+
+LOGIN_REDIRECT_URL = '/applications'
