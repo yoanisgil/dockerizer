@@ -5,6 +5,9 @@ from django.db import models
 
 
 class Repository(models.Model):
+    class Meta:
+        verbose_name_plural = "repositories"
+
     url = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
     default_branch = models.CharField(max_length=255, default='master')
@@ -13,11 +16,19 @@ class Repository(models.Model):
         return self.url
 
 
+class ApplicationTemplate(models.Model):
+    name = models.CharField(max_length=255)
+    launch_command = models.TextField()
+
+    def __unicode__(self):
+        return "%s: %s" % (self.name, self.launch_command)
+
+
 class Application(models.Model):
     owner = models.ForeignKey(User)
     name = models.CharField(max_length=255)
     repository = models.OneToOneField(Repository)
-    template = models.CharField(max_length=255, default='django-1.7')
+    template = models.ForeignKey(ApplicationTemplate)
 
     def __unicode__(self):
         return self.name
@@ -38,6 +49,9 @@ class ApplicationBuild(models.Model):
 
 
 class BuildLogEntry(models.Model):
+    class Meta:
+        verbose_name_plural = "Build Log Entries"
+
     application_build = models.ForeignKey(ApplicationBuild)
     entry_content = models.TextField()
     generated_at = models.DateField(auto_now_add=True)

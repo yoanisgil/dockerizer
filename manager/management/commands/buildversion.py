@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
                 repo.heads[branch].checkout()
 
-                build_dir = os.path.join(settings.BASE_DIR, 'docker_templates', application.template)
+                build_dir = os.path.join(settings.BASE_DIR, 'docker_templates', application.template.name)
 
                 tmp_dir = tempfile.mkdtemp(suffix='dockerizer')
                 dst_dir = os.path.join(tmp_dir, 'build')
