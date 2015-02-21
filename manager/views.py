@@ -5,5 +5,9 @@ __author__ = 'Yoanis Gil'
 from django.shortcuts import render_to_response
 
 
-def home(request):
-    return render_to_response('index.html', {},  context_instance=RequestContext(request))
+def applications(request):
+    return render_to_response('manager/applications.html', {},  context_instance=RequestContext(request))
+
+
+def repositories(request):
+    return render_to_response('manager/repositories.html', {},  context_instance=RequestContext(request))
