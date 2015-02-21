@@ -26,3 +26,5 @@ class Command(BaseCommand):
                 git.Repo.clone_from(repository.url, repository.destination, branch=repository.default_branch)
             except Application.DoesNotExist:
                 raise CommandError('Application "%s" does not exist' % application_name)
+
+        self.stdout.write(("Application successfully %s bootstrapped" % application_name))
