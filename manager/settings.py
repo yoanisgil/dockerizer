@@ -93,3 +93,7 @@ DOCKER_TLS_VERIFY = True
 
 STATIC_ROOT = '/webapp/deploy/static/'
 MEDIA_ROOT = '/webapp/deploy/media/'
+
+TEMPLATE_DIRS = (
+    os.path.join(BASE_DIR, 'templates'),
+)
