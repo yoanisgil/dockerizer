@@ -28,20 +28,18 @@
     <table class="table table-striped table-bordered table-hover" id="dataTables-example">
         <thead>
         <tr>
-            <th>{% trans "Image ID" %}</th>
-            <th>{% trans "Tag" %}</th>
             <th>{% trans "Commit" %}</th>
             <th>{% trans "Build On" %}</th>
+            <th>{% trans "Status" %}</th>
             <th>{% trans "Actions" %}</th>
         </tr>
         </thead>
         <tbody>
         {% for build in builds %}
             <tr>
-                <td>{{ build.image_id }}</td>
-                <td>{{ build.tag }}</td>
                 <td>{{ build.commit }}</td>
                 <td>{{ build.finished_at }}</td>
+                <td>{{ build.status_description }}</td>
                 <td>
                     {% if not build.is_running %}
                         <a href="{% url 'launch-build' build.id %}" type="button"

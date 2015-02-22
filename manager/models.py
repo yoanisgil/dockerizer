@@ -44,17 +44,30 @@ class ApplicationBuild(models.Model):
     launched_at = models.DateTimeField()
     finished_at = models.DateTimeField(null=True)
 
+    def __init__(self, *args, **kwargs):
+        from docker_manager import DockerManager
+
+        super(ApplicationBuild, self).__init__(*args, **kwargs)
+        self._manager = DockerManager()
+
     def __unicode__(self):
         return "%s/%s:%s" % (self.built_by, self.application.name, self.tag)
 
     def is_running(self):
-        from docker_manager import DockerManager
-
-        manager = DockerManager()
-        return manager.build_is_running(self)
+        return self._manager.build_is_running(self)
 
     def is_stopped(self):
         return not self.is_running
+
+    def status_description(self):
+        containers = self._manager.get_containers_for_application_build(self)
+
+        description = ''
+
+        if len(containers) > 0:
+            description = containers[0]['Status']
+
+        return description
 
 
 class BuildLogEntry(models.Model):
