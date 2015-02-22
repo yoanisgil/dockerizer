@@ -57,7 +57,6 @@ class ApplicationBuild(models.Model):
         return not self.is_running
 
 
-
 class BuildLogEntry(models.Model):
     class Meta:
         verbose_name_plural = "Build Log Entries"

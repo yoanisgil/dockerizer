@@ -8,6 +8,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.7/ref/settings/
 """
 
+from django.contrib.messages import constants as messages
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
@@ -99,3 +100,7 @@ TEMPLATE_DIRS = (
 )
 
 LOGIN_REDIRECT_URL = '/applications'
+
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger'
+}

@@ -17,6 +17,14 @@
 {% block page_name %}{% trans 'Builds' %}{% endblock %}
 
 {% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <table class="table table-striped table-bordered table-hover" id="dataTables-example">
         <thead>
         <tr>

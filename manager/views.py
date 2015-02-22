@@ -1,9 +1,11 @@
 __author__ = 'Yoanis Gil'
 
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils.translation import ugettext as _
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404, redirect
-from docker_manager import DockerManager
+from docker_manager import DockerManager, BuildAlreadyRunningException, BuildNotRunningException
 from models import Application, ApplicationBuild
 
 
@@ -28,15 +30,30 @@ def application_builds(request, application_id):
 def launch_build(request, build_id):
     build = get_object_or_404(ApplicationBuild, pk=build_id)
 
-    manager = DockerManager()
-    manager.launch_application(build, ports_config={80: 8080})
+    try:
+        manager = DockerManager()
+        manager.launch_build(build, ports_config={80: 8080})
+
+        messages.add_message(request, messages.INFO, "{0} {1}". format(_("Launched build"), build))
+    except BuildAlreadyRunningException, e:
+        messages.add_message(request, messages.ERROR, e.message)
 
     return redirect('application-builds', application_id=build.application_id)
 
 
 @login_required
 def stop_build(request, build_id):
-    pass
+    try:
+        build = get_object_or_404(ApplicationBuild, pk=build_id)
+
+        manager = DockerManager()
+        manager.stop_build(build)
+
+        messages.add_message(request, messages.INFO, "{0} {1}". format(_("Stopped build"), build))
+    except BuildNotRunningException, e:
+        messages.add_message(request, messages.ERROR, e.message)
+
+    return redirect('application-builds', application_id=build.application_id)
 
 
 @login_required

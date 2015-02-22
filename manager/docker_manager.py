@@ -28,6 +28,10 @@ class BuildAlreadyRunningException(Exception):
     pass
 
 
+class BuildNotRunningException(Exception):
+    pass
+
+
 class DockerCliFactory:
     def __init__(self):
         pass
@@ -125,7 +129,7 @@ class DockerManager:
         return len(containers) > 0 and containers[0]['Status'].lower().startswith("up")
 
     def build_is_stopped(self, application_build):
-        return not self.build_is_stopped(application_build)
+        return not self.build_is_running(application_build)
 
     def get_containers_for_application_build(self, application_build):
         containers = self.client.containers(all=True)
@@ -140,7 +144,7 @@ class DockerManager:
 
         return containers
 
-    def launch_application(self, application_build, ports_config={}):
+    def launch_build(self, application_build, ports_config={}):
         if self.build_is_stopped(application_build):
             application = application_build.application
             command = application.template.launch_command
@@ -154,3 +158,11 @@ class DockerManager:
             return container_id
         else:
             raise BuildAlreadyRunningException("Build %s is already running" % application_build)
+
+    def stop_build(self, application_build):
+        if self.build_is_running(application_build):
+            containers = self.get_containers_for_application_build(application_build)
+
+            self.client.stop(containers[0])
+        else:
+            raise BuildNotRunningException("Build %s is not running" % application_build)

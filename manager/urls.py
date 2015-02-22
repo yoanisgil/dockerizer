@@ -7,7 +7,7 @@ urlpatterns = patterns('',
                            name='application-builds'),
                        url(r'^application/builds/launch/(?P<build_id>\d+)$', 'manager.views.launch_build',
                            name='launch-build'),
-                       url(r'^application/builds/launch/(?P<build_id>\d+)$', 'manager.views.stop_build',
+                       url(r'^application/builds/stop/(?P<build_id>\d+)$', 'manager.views.stop_build',
                            name='stop-build'),
                        url(r'^repositories$', 'manager.views.repositories', name='repositories'),
 
