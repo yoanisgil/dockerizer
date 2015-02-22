@@ -145,7 +145,9 @@ class DockerManager:
         return containers
 
     def launch_build(self, application_build, ports_config={}):
-        if self.build_is_stopped(application_build):
+        containers = self.get_containers_for_application_build(application_build)
+
+        if len(containers) == 0:
             application = application_build.application
             command = application.template.launch_command
 
@@ -156,6 +158,8 @@ class DockerManager:
             self.client.start(container_id, port_bindings=ports_config)
 
             return container_id
+        elif not self.build_is_running(application_build):
+            self.client.start(containers[0]['Id'], port_bindings=ports_config)
         else:
             raise BuildAlreadyRunningException("Build %s is already running" % application_build)
 
