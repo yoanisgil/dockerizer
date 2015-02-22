@@ -35,10 +35,15 @@
                 <td>{{ build.commit }}</td>
                 <td>{{ build.finished_at }}</td>
                 <td>
-                    <button href="" type="button"
-                            class="btn btn-outline btn-primary">{% trans 'Launch' %}</button>
-                    <button href="" type="button"
-                            class="btn btn-outline btn-danger">{% trans 'Destroy' %}</button>
+                    {% if not build.is_running %}
+                        <a href="{% url 'launch-build' build.id %}" type="button"
+                           class="btn btn-outline btn-primary">{% trans 'Launch' %}</a>
+                    {% else %}
+                        <a href="{% url 'stop-build' build.id %}" type="button"
+                           class="btn btn-outline btn-primary">{% trans 'Stop' %}</a>
+                    {% endif %}
+                    <a href="" type="button"
+                       class="btn btn-outline btn-danger">{% trans 'Destroy' %}</a>
                 </td>
             </tr>
         {% endfor %}

@@ -47,6 +47,16 @@ class ApplicationBuild(models.Model):
     def __unicode__(self):
         return "%s/%s:%s" % (self.built_by, self.application.name, self.tag)
 
+    def is_running(self):
+        from docker_manager import DockerManager
+
+        manager = DockerManager()
+        return manager.build_is_running(self)
+
+    def is_stopped(self):
+        return not self.is_running
+
+
 
 class BuildLogEntry(models.Model):
     class Meta:
@@ -65,5 +75,3 @@ class BuildLogEntry(models.Model):
 
     def __unicode__(self):
         return "%s:%s" % (self.generated_at, self.entry_content)
-
-
