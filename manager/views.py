@@ -6,7 +6,11 @@ from django.utils.translation import ugettext as _
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from docker_manager import DockerManager, BuildAlreadyRunningException, BuildNotRunningException
-from models import Application, ApplicationBuild
+from models import Application, ApplicationBuild, Repository
+from forms import NewApplicationForm
+
+import os
+import tempfile
 
 
 @login_required
@@ -14,6 +18,39 @@ def applications(request):
     apps = Application.objects.filter(owner=request.user)
 
     return render_to_response('manager/applications.html', {'applications': apps},
+                              context_instance=RequestContext(request))
+
+
+@login_required
+def new_application(request):
+    if request.method == 'POST':
+        form = NewApplicationForm(request.POST)
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            repository = Repository()
+            repository.url = cleaned_data['repository_url']
+            tmp_dir = tempfile.mkdtemp(suffix='dockerizer')
+            repository.destination = os.path.join(tmp_dir, cleaned_data['application_name'])
+            repository.repository_type = cleaned_data['repository_type']
+
+            repository.save()
+
+            application = Application()
+            application.owner = request.user
+            application.name = cleaned_data['application_name']
+            application.repository = repository
+            application.template = cleaned_data['application_template']
+
+            application.save()
+
+            messages.add_message(request, messages.INFO, "{0} {1}".format(_("Created application "), application.name))
+
+            return redirect('applications')
+
+    else:
+        form = NewApplicationForm()
+
+    return render_to_response('manager/new_application.html', {'form': form},
                               context_instance=RequestContext(request))
 
 
@@ -34,7 +71,7 @@ def launch_build(request, build_id):
         manager = DockerManager()
         manager.launch_build(build, ports_config={80: 8080})
 
-        messages.add_message(request, messages.INFO, "{0} {1}". format(_("Launched build"), build))
+        messages.add_message(request, messages.INFO, "{0} {1}".format(_("Launched build"), build))
     except BuildAlreadyRunningException, e:
         messages.add_message(request, messages.ERROR, e.message)
 
@@ -49,7 +86,7 @@ def stop_build(request, build_id):
         manager = DockerManager()
         manager.stop_build(build)
 
-        messages.add_message(request, messages.INFO, "{0} {1}". format(_("Stopped build"), build))
+        messages.add_message(request, messages.INFO, "{0} {1}".format(_("Stopped build"), build))
     except BuildNotRunningException, e:
         messages.add_message(request, messages.ERROR, e.message)
 

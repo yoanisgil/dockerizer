@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block title %}{% trans 'Applications' %}{% endblock %}
+
+{% block page_name %}
+    {% trans 'New Application' %}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="col-lg-6">
+            <form role="form" method="post" action="{% url 'new-application' %}">
+                {% csrf_token %}
+                <div class="form-group ">
+                    {{ form.application_name.errors }}
+                    <label for="{{ form.application_name.id_for_label }}">{% trans 'Application name' %}</label>
+                    <input id="{{ form.application_name.id_for_label }}" name="{{ form.application_name.name }}"
+                           class="form-control" placeholder="{% trans 'Application name' %}"
+                           value="{{ form.application_name.value|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    {{ form.repository_url.errors }}
+                    <label for="{{ form.repository_url.id_for_label }}">{% trans 'Repository URL' %}</label>
+                    <input id="{{ form.repository_url.id_for_label }}" name="{{ form.repository_url.name }}"
+                           class="form-control" placeholder="{% trans 'Repository URL' %}"
+                           value="{{ form.repository_url.value|default:'' }}" required>
+                </div>
+                <div class="form-group">
+                    {{ form.repository_type.errors }}
+                    <label for="{{ form.repository_type.id_for_label }}">{% trans 'Repository Type' %}</label>
+                    {% for choice in form.repository_type.field.choices %}
+                        <div class="radio-inline">
+                            <label>
+                                <input type="radio" name="{{ form.repository_type.name }}"
+                                       id="{{ form.repository_type.name }}"
+                                       value="{{ choice|first }}" checked="">{{ choice|last }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.application_template.errors }}
+                    <label>{% trans 'Application template' %}</label>
+                    <select class="form-control" name="{{ form.application_template.name }}">
+                        {% for choice in form.application_template.field.choices %}
+                            <option value="{{ choice|first }}">{{ choice|last }}</option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-default">{% trans 'Create' %}</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

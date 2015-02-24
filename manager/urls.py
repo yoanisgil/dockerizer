@@ -9,5 +9,7 @@ urlpatterns = patterns('',
                            name='launch-build'),
                        url(r'^application/builds/stop/(?P<build_id>\d+)$', 'manager.views.stop_build',
                            name='stop-build'),
+                       url(r'^application/new$', 'manager.views.new_application',
+                           name='new-application'),
                        url(r'^admin/', include(admin.site.urls)),
 )

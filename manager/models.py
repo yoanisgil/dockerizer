@@ -5,12 +5,21 @@ from django.db import models
 
 
 class Repository(models.Model):
+    GIT = 1
+    MERCURIAL = 2
+
+    TYPES = (
+        (GIT, 'Git'),
+        (MERCURIAL, 'Mercurial')
+    )
+
     class Meta:
         verbose_name_plural = "repositories"
 
     url = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
     default_branch = models.CharField(max_length=255, default='master')
+    repository_type = models.IntegerField(choices=TYPES, default=GIT)
 
     def __unicode__(self):
         return self.url
@@ -21,7 +30,7 @@ class ApplicationTemplate(models.Model):
     launch_command = models.TextField()
 
     def __unicode__(self):
-        return "%s: %s" % (self.name, self.launch_command)
+        return self.name
 
 
 class Application(models.Model):
