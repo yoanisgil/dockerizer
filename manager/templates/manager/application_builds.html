@@ -14,16 +14,17 @@
     <link href="{% static "css/datatables-responsive/css/dataTables.responsive.css" %}" rel="stylesheet">
 {% endblock %}
 
-{% block page_name %}{% trans 'Builds' %}{% endblock %}
+{% block page_name %}
+    {% trans 'Builds' %}
+
+    <div class="pull-right">
+        <a href="{% url 'new-application-build' application.id %}"
+           class="btn btn-outline btn-primary">{% trans 'New Build' %}</a>
+    </div>
+{% endblock %}
 
 {% block content %}
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
+    {% include 'manager/messages.html' %}
 
     <table class="table table-striped table-bordered table-hover" id="dataTables-example">
         <thead>

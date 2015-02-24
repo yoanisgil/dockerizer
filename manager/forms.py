@@ -13,6 +13,10 @@ class ApplicationTemplateModelChoiceField(ModelChoiceField):
 
 class NewApplicationForm(forms.Form):
     application_name = forms.CharField(label=_("Application name"), max_length=255)
-    repository_url = forms.CharField(label="Repository URL", max_length=255)
+    repository_url = forms.CharField(label=_("Repository URL"), max_length=255)
     repository_type = forms.ChoiceField(widget=forms.RadioSelect, choices=Repository.TYPES)
     application_template = ApplicationTemplateModelChoiceField(queryset=ApplicationTemplate.objects.all())
+
+
+class NewApplicationBuildForm(forms.Form):
+    branch = forms.CharField(label=_("Build branch"))

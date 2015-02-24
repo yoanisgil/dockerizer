@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block title %}{% trans 'Applications' %}{% endblock %}
+
+{% block page_name %}
+    {% trans 'New Application' %}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="col-lg-6">
+            <form role="form" method="post" action="{% url 'new-application-build'  application_id  %}">
+                {% csrf_token %}
+                <div class="form-group ">
+                    {{ form.branch.errors }}
+                    <label for="{{ form.branch.id_for_label }}">{{ form.branch.label }}</label>
+                    <input id="{{ form.branch.id_for_label }}" name="{{ form.branch.name }}"
+                           class="form-control" placeholder="{{ form.branch.label }}"
+                           value="{{ form.label.value|default:'' }}" required>
+                </div>
+                <button type="submit" class="btn btn-default">{% trans 'Launch Build' %}</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

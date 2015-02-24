@@ -11,5 +11,7 @@ urlpatterns = patterns('',
                            name='stop-build'),
                        url(r'^application/new$', 'manager.views.new_application',
                            name='new-application'),
+                       url(r'^application/builds/(?P<application_id>\d+)/new$', 'manager.views.new_application_build',
+                           name='new-application-build'),
                        url(r'^admin/', include(admin.site.urls)),
 )

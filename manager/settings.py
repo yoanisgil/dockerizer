@@ -104,3 +104,5 @@ LOGIN_REDIRECT_URL = '/applications'
 MESSAGE_TAGS = {
     messages.ERROR: 'danger'
 }
+
+CELERY_BROKER_URL = 'amqp://'

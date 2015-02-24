@@ -7,10 +7,8 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from docker_manager import DockerManager, BuildAlreadyRunningException, BuildNotRunningException
 from models import Application, ApplicationBuild, Repository
-from forms import NewApplicationForm
-
-import os
-import tempfile
+from forms import NewApplicationForm, NewApplicationBuildForm
+from tasks import build_application, create_application
 
 
 @login_required
@@ -27,23 +25,13 @@ def new_application(request):
         form = NewApplicationForm(request.POST)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            repository = Repository()
-            repository.url = cleaned_data['repository_url']
-            tmp_dir = tempfile.mkdtemp(suffix='dockerizer')
-            repository.destination = os.path.join(tmp_dir, cleaned_data['application_name'])
-            repository.repository_type = cleaned_data['repository_type']
 
-            repository.save()
+            create_application.apply_async(
+                (request.user.id, cleaned_data['application_name'], cleaned_data['application_template'],
+                 cleaned_data['repository_url'], cleaned_data['repository_type']))
 
-            application = Application()
-            application.owner = request.user
-            application.name = cleaned_data['application_name']
-            application.repository = repository
-            application.template = cleaned_data['application_template']
-
-            application.save()
-
-            messages.add_message(request, messages.INFO, "{0} {1}".format(_("Created application "), application.name))
+            messages.add_message(request, messages.INFO,
+                                 "{0}".format(_("Application created, bootstrap is in progress ")))
 
             return redirect('applications')
 
@@ -57,9 +45,28 @@ def new_application(request):
 @login_required
 def application_builds(request, application_id):
     application = get_object_or_404(Application, pk=application_id)
-    builds = ApplicationBuild.objects.filter(application=application).order_by('-finished_at')
+    builds = ApplicationBuild.objects.filter(application_id=application_id).order_by('-finished_at')
 
-    return render_to_response('manager/application_builds.html', {'': application, 'builds': builds},
+    return render_to_response('manager/application_builds.html', {'application': application, 'builds': builds},
+                              context_instance=RequestContext(request))
+
+
+@login_required
+def new_application_build(request, application_id):
+    application = get_object_or_404(Application, pk=application_id)
+    if request.method == 'POST':
+        form = NewApplicationBuildForm(request.POST)
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            build_application.apply_async((application_id, cleaned_data['branch'], request.user.id))
+            messages.add_message(request, messages.INFO,
+                                 "{0} {1}".format(_("Created application build for "), application.name))
+            return redirect('application-builds', application_id=application_id)
+
+    else:
+        form = NewApplicationBuildForm()
+
+    return render_to_response('manager/new_application_build.html', {'form': form, 'application_id': application_id},
                               context_instance=RequestContext(request))
 
 

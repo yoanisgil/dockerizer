@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.conf import settings
 
-from manager.models import ApplicationBuild, BuildLogEntry
+from manager.models import ApplicationBuild, BuildLogEntry, Application, Repository
 
 import re
 import os
@@ -63,7 +63,31 @@ class DockerManager:
     def __init__(self):
         self.client = DockerCliFactory.get_client()
 
-    def build_application(self, application, branch):
+    @staticmethod
+    def create_application(user_id, application_name, application_template, repository_url, repository_type):
+        repository = Repository()
+        repository.url = repository_url
+        tmp_dir = tempfile.mkdtemp(suffix='dockerizer')
+        repository.destination = os.path.join(tmp_dir, application_name)
+        repository.repository_type = repository_type
+
+        repository.save()
+
+        user = User.objects.get(pk=user_id)
+        application = Application()
+        application.owner = user
+        application.name = application_name
+        application.repository = repository
+        application.template = application_template
+
+        git.Repo.clone_from(repository.url, repository.destination, branch=repository.default_branch)
+
+        repository.save()
+        application.save()
+
+        return application
+
+    def build_application(self, application, branch, user_id):
         repository = application.repository
 
         if not os.path.exists(repository.destination):
@@ -74,7 +98,25 @@ class DockerManager:
         if repo.is_dirty():
             raise DirtyRepositoryException('Repository %s is dirty' % repository.destination)
 
+        user = User.objects.get(pk=user_id)
+
+        application_build = ApplicationBuild()
+        application_build.application = application
+        application_build.branch = branch
+        application_build.commit = repo.head.commit.name_rev
+        application_build.built_by = user
+        application_build.launched_at = timezone.now()
+        application_build.save()
+
+        origin = repo.remote('origin')
+        repo.create_head(branch, origin.refs[branch]).set_tracking_branch(origin.refs[branch])
+
+        BuildLogEntry.record_new_entry(application_build=application_build,
+                                       entry_content="Checking out branch {0}".format(branch))
         repo.heads[branch].checkout()
+
+        BuildLogEntry.record_new_entry(application_build=application_build, entry_content="Pulling latest changes")
+        origin.pull()
 
         build_dir = os.path.join(settings.BASE_DIR, 'docker_templates', application.template.name)
 
@@ -86,20 +128,10 @@ class DockerManager:
 
         image_id = None
 
-        builder = User.objects.get(username='admin')
         tag = repo.head.commit.name_rev[0:12]
-        image_repository = "%s/%s" % (builder.username, application.name)
+        image_repository = "%s/%s" % (user.username, application.name)
 
-        application_build = ApplicationBuild()
-        application_build.application = application
-        application_build.branch = branch
-        application_build.commit = repo.head.commit.name_rev
-        application_build.built_by = builder
-        application_build.launched_at = timezone.now()
-
-        application_build.save()
-
-        for line in self.build(rm=True, path=dst_dir):
+        for line in self.client.build(rm=True, path=dst_dir):
             data = json.loads(line)
 
             if 'stream' in data:
