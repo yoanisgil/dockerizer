@@ -43,14 +43,14 @@
                 <td>{{ build.status_description }}</td>
                 <td>
                     {% if not build.is_running %}
-                        <a href="{% url 'launch-build' build.id %}" type="button"
+                        <a href="{% url 'launch-build' build.id %}"
                            class="btn btn-outline btn-primary">{% trans 'Launch' %}</a>
                     {% else %}
                         <a href="{% url 'stop-build' build.id %}" type="button"
                            class="btn btn-outline btn-primary">{% trans 'Stop' %}</a>
                     {% endif %}
-                    <a href="" type="button"
-                       class="btn btn-outline btn-danger">{% trans 'Destroy' %}</a>
+                    <a href="{% url 'build-logs' build.id %}" class="btn btn-primary btn-outline">{% trans 'Logs' %}</a>
+                    <a href="{% url 'destroy-build' build.id %}" class="btn btn-outline btn-danger">{% trans 'Destroy' %}</a>
                 </td>
             </tr>
         {% endfor %}

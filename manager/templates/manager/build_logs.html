@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block title %}{% trans 'Build logs for' %} {{ application_build }}{% endblock %}
+
+
+{% block page_name %}
+    {% trans 'Build Logs' %}
+
+    <div class="pull-right">
+        <a href="{% url 'application-builds' application_build.application_id %}"
+           class="btn btn-outline btn-primary">{% trans 'Back to Builds' %}</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    {% include 'manager/messages.html' %}
+
+    <table class="table table-striped table-bordered table-hover" id="dataTables-example">
+        <thead>
+        <tr>
+            <th>{% trans "Item No." %}</th>
+            <th>{% trans "Log Entry" %}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for log in logs %}
+            <tr>
+                <td>{{ forloop.revcounter }}</td>
+                <td>{{ log }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

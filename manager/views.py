@@ -6,9 +6,10 @@ from django.utils.translation import ugettext as _
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from docker_manager import DockerManager, BuildAlreadyRunningException, BuildNotRunningException
-from models import Application, ApplicationBuild, Repository
+from models import Application, ApplicationBuild
 from forms import NewApplicationForm, NewApplicationBuildForm
-from tasks import build_application, create_application
+from tasks import build_application as task_build_application, create_application as task_create_application, \
+    destroy_application as task_destroy_application
 
 
 @login_required
@@ -26,7 +27,7 @@ def new_application(request):
         if form.is_valid():
             cleaned_data = form.cleaned_data
 
-            create_application.apply_async(
+            task_create_application.apply_async(
                 (request.user.id, cleaned_data['application_name'], cleaned_data['application_template'],
                  cleaned_data['repository_url'], cleaned_data['repository_type']))
 
@@ -58,7 +59,7 @@ def new_application_build(request, application_id):
         form = NewApplicationBuildForm(request.POST)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            build_application.apply_async((application_id, cleaned_data['branch'], request.user.id))
+            task_build_application.apply_async((application_id, cleaned_data['branch'], request.user.id))
             messages.add_message(request, messages.INFO,
                                  "{0} {1}".format(_("Created application build for "), application.name))
             return redirect('application-builds', application_id=application_id)
@@ -88,21 +89,48 @@ def launch_build(request, build_id):
 @login_required
 def stop_build(request, build_id):
     try:
-        build = get_object_or_404(ApplicationBuild, pk=build_id)
+        application_build = get_object_or_404(ApplicationBuild, pk=build_id)
 
         manager = DockerManager()
-        manager.stop_build(build)
+        manager.stop_build(application_build)
 
-        messages.add_message(request, messages.INFO, "{0} {1}".format(_("Stopped build"), build))
+        messages.add_message(request, messages.INFO, "{0} {1}".format(_("Stopped build"), application_build))
     except BuildNotRunningException, e:
         messages.add_message(request, messages.ERROR, e.message)
 
-    return redirect('application-builds', application_id=build.application_id)
+    return redirect('application-builds', application_id=application_build.application_id)
 
 
 @login_required
 def destroy_build(request, build_id):
-    pass
+    application_build = get_object_or_404(ApplicationBuild, pk=build_id)
+
+    manager = DockerManager()
+    manager.destroy_build(application_build)
+
+    return redirect('application-builds', application_id=application_build.application_id)
+
+
+@login_required
+def build_logs(request, build_id):
+    application_build = get_object_or_404(ApplicationBuild, pk=build_id)
+
+    manager = DockerManager()
+    logs = manager.build_logs(application_build)
+
+    return render_to_response('manager/build_logs.html', {'logs': logs, 'application_build': application_build},
+                              context_instance=RequestContext(request))
+
+
+@login_required
+def destroy_application(request, application_id):
+    application = get_object_or_404(Application, pk=application_id)
+    task_destroy_application.apply_async((application_id,))
+
+    messages.add_message(request, messages.INFO,
+                         "{0} {1}".format(_("Destroying application "), application.name))
+
+    return redirect('applications')
 
 
 @login_required

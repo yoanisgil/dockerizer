@@ -32,6 +32,14 @@ class BuildNotRunningException(Exception):
     pass
 
 
+class ContainerNotFoundException(Exception):
+    pass
+
+
+class BuildImageNotFoundException(Exception):
+    pass
+
+
 class DockerCliFactory:
     def __init__(self):
         pass
@@ -155,14 +163,6 @@ class DockerManager:
 
         return application_build
 
-    def build_is_running(self, application_build):
-        containers = self.get_containers_for_application_build(application_build)
-
-        return len(containers) > 0 and containers[0]['Status'].lower().startswith("up")
-
-    def build_is_stopped(self, application_build):
-        return not self.build_is_running(application_build)
-
     def get_containers_for_application_build(self, application_build):
         containers = self.client.containers(all=True)
         image_name = "%s/%s:%s" % (
@@ -174,7 +174,23 @@ class DockerManager:
             if container['Image'] == image_name:
                 result.append(container)
 
-        return containers
+        return result
+
+    def get_container_for_application_build(self, application_build):
+        containers = self.get_containers_for_application_build(application_build)
+
+        if len(containers) == 0:
+            raise ContainerNotFoundException("Cannot find container for build {0}".format(application_build))
+
+        return containers[0]
+
+    def build_is_running(self, application_build):
+        containers = self.get_containers_for_application_build(application_build)
+
+        return len(containers) > 0 and containers[0]['Status'].lower().startswith("up")
+
+    def build_is_stopped(self, application_build):
+        return not self.build_is_running(application_build)
 
     def launch_build(self, application_build, ports_config={}):
         containers = self.get_containers_for_application_build(application_build)
@@ -197,8 +213,63 @@ class DockerManager:
 
     def stop_build(self, application_build):
         if self.build_is_running(application_build):
-            containers = self.get_containers_for_application_build(application_build)
+            container = self.get_container_for_application_build(application_build)
 
-            self.client.stop(containers[0])
+            self.client.stop(container)
         else:
             raise BuildNotRunningException("Build %s is not running" % application_build)
+
+    def build_logs(self, application_build, lines_count=100):
+        container = self.get_container_for_application_build(application_build)
+
+        logs = self.client.logs(container['Id'], tail=lines_count).split('\n')
+        logs.reverse()
+
+        return logs
+
+    def image_for_build(self, application_build):
+        images = self.client.images(all=True)
+
+        images = [image for image in images if image['Id'].startswith(application_build.image_id)]
+
+        if len(images) == 0:
+            raise BuildImageNotFoundException("Cannot find image for build" % application_build)
+
+        return images[0]
+
+    def destroy_build(self, application_build):
+        try:
+            container = self.get_container_for_application_build(application_build)
+
+            if self.build_is_running(application_build):
+                self.stop_build(application_build)
+
+            self.client.remove_container(container)
+        except ContainerNotFoundException:
+            pass
+
+        build_image = self.image_for_build(application_build)
+
+        self.client.remove_image(build_image)
+
+        application_build.delete()
+
+    def destroy_application(self, application):
+        builds = ApplicationBuild.objects.filter(application=application)
+
+        for build in builds:
+            self.destroy_build(build)
+
+        shutil.rmtree(application.repository.destination)
+
+        application.repository.delete()
+        application.delete()
+
+
+
+
+
+
+
+
+
