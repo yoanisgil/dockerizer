@@ -95,73 +95,76 @@ class DockerManager:
 
         return application
 
-    def build_application(self, application, branch, user_id):
-        repository = application.repository
+    def build_application(self, application_build, branch):
+        try:
+            application_build.status = ApplicationBuild.BUILDING
 
-        if not os.path.exists(repository.destination):
-            raise ApplicationNotBuildException('Application %s has not been bootstrapped' % repository.destination)
+            application = application_build.application
+            repository = application.repository
 
-        repo = git.Repo(repository.destination)
+            if not os.path.exists(repository.destination):
+                raise ApplicationNotBuildException('Application %s has not been bootstrapped' % repository.destination)
 
-        if repo.is_dirty():
-            raise DirtyRepositoryException('Repository %s is dirty' % repository.destination)
+            repo = git.Repo(repository.destination)
 
-        user = User.objects.get(pk=user_id)
+            if repo.is_dirty():
+                raise DirtyRepositoryException('Repository %s is dirty' % repository.destination)
 
-        application_build = ApplicationBuild()
-        application_build.application = application
-        application_build.branch = branch
-        application_build.commit = repo.head.commit.name_rev
-        application_build.built_by = user
-        application_build.launched_at = timezone.now()
-        application_build.save()
+            application_build.commit = repo.head.commit.name_rev
+            application_build.launched_at = timezone.now()
+            application_build.save()
 
-        origin = repo.remote('origin')
-        repo.create_head(branch, origin.refs[branch]).set_tracking_branch(origin.refs[branch])
+            origin = repo.remote('origin')
+            repo.create_head(branch, origin.refs[branch]).set_tracking_branch(origin.refs[branch])
 
-        BuildLogEntry.record_new_entry(application_build=application_build,
-                                       entry_content="Checking out branch {0}".format(branch))
-        repo.heads[branch].checkout()
+            BuildLogEntry.record_new_entry(application_build=application_build,
+                                           entry_content="Checking out branch {0}".format(branch))
+            repo.heads[branch].checkout()
 
-        BuildLogEntry.record_new_entry(application_build=application_build, entry_content="Pulling latest changes")
-        origin.pull()
+            BuildLogEntry.record_new_entry(application_build=application_build, entry_content="Pulling latest changes")
+            origin.pull()
 
-        build_dir = os.path.join(settings.BASE_DIR, 'docker_templates', application.template.name)
+            build_dir = os.path.join(settings.BASE_DIR, 'docker_templates', application.template.name)
 
-        tmp_dir = tempfile.mkdtemp(suffix='dockerizer')
-        dst_dir = os.path.join(tmp_dir, 'build')
-        shutil.copytree(build_dir, dst_dir)
+            tmp_dir = tempfile.mkdtemp(suffix='dockerizer')
+            dst_dir = os.path.join(tmp_dir, 'build')
+            shutil.copytree(build_dir, dst_dir)
 
-        os.link(repository.destination, os.path.join(dst_dir, 'app'))
+            os.link(repository.destination, os.path.join(dst_dir, 'app'))
 
-        image_id = None
+            image_id = None
 
-        tag = repo.head.commit.name_rev[0:12]
-        image_repository = "%s/%s" % (user.username, application.name)
+            tag = repo.head.commit.name_rev[0:12]
+            image_repository = "%s/%s" % (application_build.built_by.username, application.name)
 
-        for line in self.client.build(rm=True, path=dst_dir):
-            data = json.loads(line)
+            for line in self.client.build(rm=True, path=dst_dir):
+                data = json.loads(line)
 
-            if 'stream' in data:
-                search = r'Successfully built ([0-9a-f]+)'
-                match = re.search(search, data['stream'])
-                if match:
-                    image_id = match.group(1)
+                if 'stream' in data:
+                    search = r'Successfully built ([0-9a-f]+)'
+                    match = re.search(search, data['stream'])
+                    if match:
+                        image_id = match.group(1)
 
-            BuildLogEntry.record_new_entry(application_build=application_build, entry_content=line)
+                BuildLogEntry.record_new_entry(application_build=application_build, entry_content=line)
 
-        self.client.tag(image=image_id, tag=tag, repository=image_repository)
+            self.client.tag(image=image_id, tag=tag, repository=image_repository)
 
-        os.unlink(os.path.join(dst_dir, 'app'))
-        shutil.rmtree(tmp_dir)
+            os.unlink(os.path.join(dst_dir, 'app'))
+            shutil.rmtree(tmp_dir)
 
-        application_build.image_id = image_id
-        application_build.tag = tag
-        application_build.finished_at = timezone.now()
+            application_build.image_id = image_id
+            application_build.tag = tag
+            application_build.finished_at = timezone.now()
 
-        application_build.save()
+            application_build.build_status = ApplicationBuild.BUILT
 
-        return application_build
+            application_build.save()
+        except Exception, e:
+            application_build.build_status = ApplicationBuild.FAILED
+            application_build.save()
+
+            raise e
 
     def get_containers_for_application_build(self, application_build):
         containers = self.client.containers(all=True)

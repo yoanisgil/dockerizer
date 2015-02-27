@@ -2,10 +2,30 @@
 {% load staticfiles %}
 {% load i18n %}
 
-{% block title %}{% trans 'Applications' %}{% endblock %}
+{% block head %}
+    {{ block.super }}
+
+    <style scoped>
+        #build-log {
+            background-color: black;
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            height: 500px;
+            overflow: scroll;
+            padding: 1em;
+            margin-top: 1em;
+            display: none;
+        }
+    </style>
+
+    <script src="{% static "js/require.min.js" %}" data-main="{% static "js/application_build" %}"></script>
+{% endblock %}
+
+{% block title %}{% trans 'New Application Build' %}{% endblock %}
 
 {% block page_name %}
-    {% trans 'New Application' %}
+    {% trans 'New Application Build' %}
 {% endblock %}
 
 {% block content %}
@@ -17,7 +37,8 @@
         {% endif %}
 
         <div class="col-lg-6">
-            <form role="form" method="post" action="{% url 'new-application-build'  application_id  %}">
+            <form id="new-build-form" role="form" method="post"
+                  action="{% url 'new-application-build'  application_id %}">
                 {% csrf_token %}
                 <div class="form-group ">
                     {{ form.branch.errors }}
@@ -26,8 +47,17 @@
                            class="form-control" placeholder="{{ form.branch.label }}"
                            value="{{ form.label.value|default:'' }}" required>
                 </div>
-                <button type="submit" class="btn btn-default">{% trans 'Launch Build' %}</button>
+                <a href='#' class='btn btn-outline btn-primary' id="new-build"
+                   type="submit">{% trans 'Launch Build' %}</a>
             </form>
+            <div class="alert" style="display: none;" id="message">
+                {{ message }}
+            </div>
+        </div>
+    </div>
+    <div class="row" id="build-log">
+        <div class="col-lg-12">
+
         </div>
     </div>
 {% endblock %}

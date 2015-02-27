@@ -44,14 +44,22 @@ class Application(models.Model):
 
 
 class ApplicationBuild(models.Model):
+    CREATED = 1
+    BUILDING = 2
+    FAILED = 3
+    BUILT = 4
+
+    STATUS = ((CREATED, 'Created'), (BUILDING, 'Building'), (FAILED, 'Failed'), (BUILT, 'Built'))
+
     application = models.ForeignKey(Application)
     image_id = models.TextField()
     tag = models.CharField(max_length=255)
     branch = models.CharField(max_length=255)
-    commit = models.CharField(max_length=255)
+    commit = models.CharField(max_length=255, null=True)
     built_by = models.ForeignKey(User)
-    launched_at = models.DateTimeField()
+    launched_at = models.DateTimeField(null=True)
     finished_at = models.DateTimeField(null=True)
+    build_status = models.IntegerField(choices=STATUS, default=CREATED)
 
     def __init__(self, *args, **kwargs):
         from docker_manager import DockerManager
@@ -78,6 +86,15 @@ class ApplicationBuild(models.Model):
 
         return description
 
+    def is_building(self):
+        return self.build_status == ApplicationBuild.BUILDING
+
+    def build_success(self):
+        return self.build_status == ApplicationBuild.BUILT
+
+    def build_failed(self):
+        return self.build_status == ApplicationBuild.FAILED
+
 
 class BuildLogEntry(models.Model):
     class Meta:
@@ -85,7 +102,7 @@ class BuildLogEntry(models.Model):
 
     application_build = models.ForeignKey(ApplicationBuild)
     entry_content = models.TextField()
-    generated_at = models.DateField(auto_now_add=True)
+    generated_at = models.DateTimeField(auto_now_add=True)
 
     @staticmethod
     def record_new_entry(*args, **kwargs):
