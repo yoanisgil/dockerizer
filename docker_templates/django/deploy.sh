@@ -23,7 +23,7 @@ test -d $RUNDIR || mkdir -p $RUNDIR
 
 cd $DJANGODIR
 python manage.py migrate --noinput
-python manage.py collectlayers --noinput
+python manage.py collectstatic --noinput
 python manage.py dockersetup --username admin --password admin --email gil.yoanis@gmail.com
 
 # Start your Django Unicorn
