@@ -16,7 +16,8 @@ Please follo the installation steps bellow to get the project up and running:
     DOCKER_TLS_VERIFY = 1
     DOCKER_CERT_PATH = '/PATH/TO/YOUR/DOCKER/CERTIFICATE'
     DOCKER_TLS_VERIFY = True 
-* Launch the celery: celery -A manager worker -l debug
+* Install a celery broke: http://celery.readthedocs.org/en/latest/getting-started/brokers/index.html
+* Launch celery: celery -A manager worker -l debug
 
 *Usage*
 
