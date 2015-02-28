@@ -26,6 +26,11 @@
 
 {% block page_name %}
     {% trans 'New Application Build' %}
+
+    <div class="pull-right">
+        <a href="{% url 'application-builds' application_id %}"
+           class="btn btn-outline btn-primary">{% trans 'Back to Builds' %}</a>
+    </div>
 {% endblock %}
 
 {% block content %}
