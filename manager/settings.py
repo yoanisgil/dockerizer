@@ -39,7 +39,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'manager',
-    'dockerizer'
+    'dockerizer',
+    'registration',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -99,7 +100,6 @@ TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, 'templates'),
 )
 
-LOGIN_REDIRECT_URL = '/applications'
 
 MESSAGE_TAGS = {
     messages.ERROR: 'danger'

@@ -22,5 +22,7 @@ urlpatterns = patterns('',
                            name='new-application'),
                        url(r'^application/builds/(?P<application_id>\d+)/new$', 'manager.views.new_application_build',
                            name='new-application-build'),
+                       # Registration urls
+                       (r'^accounts/', include('registration.backends.default.urls')),
                        url(r'^admin/', include(admin.site.urls)),
 )
