@@ -7,7 +7,7 @@ Docker's online documentation to see how to get started: https://docs.docker.com
 
 *Installation*
 
-Please follo the installation steps bellow to get the project up and running:
+Please follow the installation steps bellow to get the project up and running:
 
 * Clone the repository: https://github.com/yoanisgil/dockerizer.git 
 * Install requirements: pip install -r requirements.txt
@@ -16,8 +16,9 @@ Please follo the installation steps bellow to get the project up and running:
     DOCKER_TLS_VERIFY = 1
     DOCKER_CERT_PATH = '/PATH/TO/YOUR/DOCKER/CERTIFICATE'
     DOCKER_TLS_VERIFY = True 
-* Install a celery broke: http://celery.readthedocs.org/en/latest/getting-started/brokers/index.html
+* Install a celery broker: http://celery.readthedocs.org/en/latest/getting-started/brokers/index.html
 * Launch celery: celery -A manager worker -l debug
+* Launch the application: manage.py runserver
 
 *Usage*
 
