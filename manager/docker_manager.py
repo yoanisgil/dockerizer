@@ -73,27 +73,42 @@ class DockerManager:
 
     @staticmethod
     def create_application(user_id, application_name, application_template, repository_url, repository_type):
-        repository = Repository()
-        repository.url = repository_url
+        application = None
+        repository = None
         tmp_dir = tempfile.mkdtemp(suffix='dockerizer')
-        repository.destination = os.path.join(tmp_dir, application_name)
-        repository.repository_type = repository_type
 
-        repository.save()
+        try:
+            repository = Repository()
+            repository.url = repository_url
+            repository.destination = os.path.join(tmp_dir, application_name)
+            repository.repository_type = repository_type
 
-        user = User.objects.get(pk=user_id)
-        application = Application()
-        application.owner = user
-        application.name = application_name
-        application.repository = repository
-        application.template = application_template
+            repository.save()
 
-        git.Repo.clone_from(repository.url, repository.destination, branch=repository.default_branch)
+            user = User.objects.get(pk=user_id)
+            application = Application()
+            application.owner = user
+            application.name = application_name
+            application.repository = repository
+            application.template = application_template
+            application.status = Application.CLONING_REPO
+            application.save()
 
-        repository.save()
-        application.save()
+            git.Repo.clone_from(repository.url, repository.destination, branch=repository.default_branch)
 
-        return application
+            application.status = Application.REPO_CLONED
+            application.save()
+
+            return application
+        except Exception, e:
+            if application is not None:
+                application.status = Application.FAILED_TO_CREATE
+                application.save()
+
+            if repository is not None:
+                shutil.rmtree(tmp_dir)
+
+            raise e
 
     def build_application(self, application_build, branch):
         try:
@@ -110,9 +125,7 @@ class DockerManager:
             if repo.is_dirty():
                 raise DirtyRepositoryException('Repository %s is dirty' % repository.destination)
 
-            application_build.commit = repo.head.commit.name_rev
             application_build.launched_at = timezone.now()
-            application_build.save()
 
             origin = repo.remote('origin')
             repo.create_head(branch, origin.refs[branch]).set_tracking_branch(origin.refs[branch])
@@ -123,6 +136,9 @@ class DockerManager:
 
             BuildLogEntry.record_new_entry(application_build=application_build, entry_content="Pulling latest changes")
             origin.pull()
+
+            application_build.commit = repo.head.commit.name_rev
+            application_build.save()
 
             build_dir = os.path.join(settings.BASE_DIR, 'docker_templates', application.template.name)
 
@@ -263,7 +279,8 @@ class DockerManager:
         for build in builds:
             self.destroy_build(build)
 
-        shutil.rmtree(application.repository.destination)
+        if os.path.exists(application.repository.destination):
+            shutil.rmtree(application.repository.destination)
 
         application.repository.delete()
         application.delete()

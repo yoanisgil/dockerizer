@@ -49,8 +49,12 @@
                         <a href="{% url 'stop-build' build.id %}" type="button"
                            class="btn btn-outline btn-primary">{% trans 'Stop' %}</a>
                     {% endif %}
-                    <a href="{% url 'build-logs' build.id %}" class="btn btn-primary btn-outline">{% trans 'Logs' %}</a>
-                    <a href="{% url 'destroy-build' build.id %}" class="btn btn-outline btn-danger">{% trans 'Destroy' %}</a>
+                    {% if build.build_has_container %}
+                        <a href="{% url 'build-logs' build.id %}"
+                           class="btn btn-primary btn-outline">{% trans 'Logs' %}</a>
+                    {% endif %}
+                    <a href="{% url 'destroy-build' build.id %}"
+                       class="btn btn-outline btn-danger">{% trans 'Destroy' %}</a>
                 </td>
             </tr>
         {% endfor %}

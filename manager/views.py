@@ -77,6 +77,7 @@ def new_application_build(request, application_id):
 
             application_build.save()
             task_build_application.apply_async((application_build.id, cleaned_data['branch']))
+            #task_build_application(application_build.id, cleaned_data['branch'])
 
             response['message'] = "{0} {1}".format(_("Created application build for "), application.name)
             response['build_image_logs_url'] = reverse('build-image-logs',

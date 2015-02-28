@@ -34,13 +34,33 @@ class ApplicationTemplate(models.Model):
 
 
 class Application(models.Model):
+    CREATED = 1
+    CLONING_REPO = 2
+    REPO_CLONED = 3
+    FAILED_TO_CREATE = -1
+    UNKNOWN = -2
+
+    STATUS = ((CREATED, 'Created'),
+              (CLONING_REPO, 'Cloning repository'),
+              (REPO_CLONED, 'Repository cloned'),
+              (FAILED_TO_CREATE, 'Failed to create application'),
+              (UNKNOWN, 'Unknown'))
+
     owner = models.ForeignKey(User)
     name = models.CharField(max_length=255)
     repository = models.OneToOneField(Repository)
     template = models.ForeignKey(ApplicationTemplate)
+    status = models.IntegerField(choices=STATUS, default=CREATED)
 
     def __unicode__(self):
         return self.name
+
+    def status_description(self):
+        for status in Application.STATUS:
+            status_id, description = status
+
+            if self.status == status_id:
+                return description
 
 
 class ApplicationBuild(models.Model):
@@ -85,6 +105,9 @@ class ApplicationBuild(models.Model):
             description = containers[0]['Status']
 
         return description
+
+    def build_has_container(self):
+        return len(self._manager.get_containers_for_application_build(self)) > 0
 
     def is_building(self):
         return self.build_status == ApplicationBuild.BUILDING

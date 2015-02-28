@@ -23,6 +23,10 @@
 {% endblock %}
 
 {% block content %}
+    <div class="alert alert-warning">
+        {% trans 'Content might not reflect latest application status' %} <a href="{% url 'applications' %}"
+                                                                             class="btn btn-primary btn-outline">{% trans 'Refresh' %}</a>
+    </div>
     {% include 'manager/messages.html' %}
 
     <table class="table table-striped table-bordered table-hover" id="dataTables-example">
@@ -31,15 +35,17 @@
             <th>{% trans "Application Name" %}</th>
             <th>{% trans "Repository" %}</th>
             <th>{% trans "Template" %}</th>
+            <th>{% trans "Status" %}</th>
             <th>{% trans "Actions" %}</th>
         </tr>
         </thead>
         <tbody>
         {% for app in applications %}
-            <tr>
+            <tr {% if app.status < 0 %} class="alert-danger" {% endif %}>
                 <td>{{ app.name }}</td>
                 <td>{{ app.repository.url }}</td>
                 <td>{{ app.template }}</td>
+                <td>{{ app.status_description }}</td>
                 <td>
                     <a href="{% url 'application-builds' app.id %}"
                        class="btn btn-outline btn-primary">{% trans 'Builds' %}</a>
