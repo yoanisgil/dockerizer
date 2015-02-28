@@ -33,9 +33,9 @@ def new_application(request):
         if form.is_valid():
             cleaned_data = form.cleaned_data
 
-            task_create_application.apply_async(
-                (request.user.id, cleaned_data['application_name'], cleaned_data['application_template'],
-                 cleaned_data['repository_url'], cleaned_data['repository_type']))
+            task_create_application.apply_async((
+                request.user.id, cleaned_data['application_name'], cleaned_data['application_template'],
+                cleaned_data['repository_url'], cleaned_data['repository_type']))
 
             messages.add_message(request, messages.INFO,
                                  "{0}".format(_("Application created, bootstrap is in progress ")))
