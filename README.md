@@ -12,7 +12,6 @@ Please follo the installation steps bellow to get the project up and running:
 * Clone the repository: https://github.com/yoanisgil/dockerizer.git 
 * Install requirements: pip install -r requirements.txt
 * Add your dockers settings to manager/settings.py:
-
     DOCKER_HOST = 'https://IP:PORT'
     DOCKER_TLS_VERIFY = 1
     DOCKER_CERT_PATH = '/PATH/TO/YOUR/DOCKER/CERTIFICATE'
