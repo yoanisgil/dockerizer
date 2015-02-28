@@ -66,10 +66,11 @@ class Application(models.Model):
 class ApplicationBuild(models.Model):
     CREATED = 1
     BUILDING = 2
-    FAILED = 3
+    FAILED = -1
     BUILT = 4
 
-    STATUS = ((CREATED, 'Created'), (BUILDING, 'Building'), (FAILED, 'Failed'), (BUILT, 'Built'))
+    STATUS = (
+    (CREATED, 'Created'), (BUILDING, 'Building image'), (FAILED, 'Failed to built image'), (BUILT, 'Image built'))
 
     application = models.ForeignKey(Application)
     image_id = models.TextField()
@@ -103,6 +104,13 @@ class ApplicationBuild(models.Model):
 
         if len(containers) > 0:
             description = containers[0]['Status']
+        else:
+            for status in ApplicationBuild.STATUS:
+                status_id, status_description = status
+
+                if self.build_status == status_id:
+                    description = status_description
+                    break
 
         return description
 
