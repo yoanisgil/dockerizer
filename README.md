@@ -18,7 +18,7 @@ Please follow the installation steps bellow to get the project up and running:
     DOCKER_TLS_VERIFY = True 
 * Install a celery broker: http://celery.readthedocs.org/en/latest/getting-started/brokers/index.html
 * Launch celery: celery -A manager worker -l debug
-* Launch the application: manage.py runserver
+* Launch the application: python manage.py runserver
 
 *Usage*
 
